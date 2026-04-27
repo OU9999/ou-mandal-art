@@ -52,13 +52,13 @@ const getCellRole = (index: number): CellRole => {
 
 const keywordPlaceholderMap = new Map<number, string>();
 centralKeywordPairs.forEach(({ centerIndex, boardIndex }, order) => {
-  const label = `목표 ${order + 1}`;
+  const label = `Petal ${order + 1}`;
   keywordPlaceholderMap.set(centerIndex, label);
   keywordPlaceholderMap.set(getBoardCenterIndex(boardIndex), label);
 });
 
 const getPlaceholder = (index: number) => {
-  if (index === 40) return "최종 목표";
+  if (index === 40) return "Core";
   return keywordPlaceholderMap.get(index) ?? "";
 };
 

@@ -410,7 +410,7 @@ textarea {
 }
 
 .mandal-cell textarea::placeholder {
-  color: rgba(176, 192, 220, 0.42);
+  color: rgba(206, 220, 245, 0.78);
   opacity: 1;
 }
 
