@@ -50,11 +50,16 @@ const getCellRole = (index: number): CellRole => {
   return "action";
 };
 
+const keywordPlaceholderMap = new Map<number, string>();
+centralKeywordPairs.forEach(({ centerIndex, boardIndex }, order) => {
+  const label = `목표 ${order + 1}`;
+  keywordPlaceholderMap.set(centerIndex, label);
+  keywordPlaceholderMap.set(getBoardCenterIndex(boardIndex), label);
+});
+
 const getPlaceholder = (index: number) => {
-  const role = getCellRole(index);
-  if (role === "goal") return "목표";
-  if (role === "keyword") return "핵심";
-  return "실행";
+  if (index === 40) return "최종 목표";
+  return keywordPlaceholderMap.get(index) ?? "";
 };
 
 const getBoardClass = (index: number) => `mandal-cell is-${getCellRole(index)}`;

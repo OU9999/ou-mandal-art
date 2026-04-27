@@ -9,11 +9,8 @@ const MandalActions = ({ onExport }: MandalActionsProps) => {
 
   return (
     <nav className="mandal-actions" aria-label="Mandal-Art actions">
-      <a className="route-pill" href={`${import.meta.env.BASE_URL}3d`}>
-        3D
-      </a>
       <button type="button" className="route-pill" onClick={onExport}>
-        PNG
+        Make Image
       </button>
       <button type="button" className="route-pill" onClick={reset}>
         Reset
