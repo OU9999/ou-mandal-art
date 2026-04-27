@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { toPng } from "html-to-image";
-import { BoxGlowLayer } from "./BoxGlowLayer";
-import { ThermalBackground } from "./ThermalBackground";
+import { BoxGlowLayer } from "./box-glow-layer";
+import { ThermalBackground } from "./thermal-background";
 
 const STORAGE_KEY = "ou-mandal-art:cells:v1";
 const EMPTY_CELLS = Array.from({ length: 81 }, () => "");

@@ -1,5 +1,5 @@
-import { MandalArtPage } from "./components/MandalArtPage";
-import { ThermalStage } from "./components/ThermalStage";
+import { MandalArtPage } from "./components/mandal-art-page";
+import { ThermalStage } from "./components/thermal-stage";
 
 function getRoute() {
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
