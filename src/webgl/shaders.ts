@@ -145,6 +145,36 @@ float boardHeat(vec2 nb, float index) {
   return clamp(heat, 0.0, 1.0);
 }
 
+float borderHeat(vec2 p, float boardSize, float d, float index) {
+  float halfSize = boardSize * 0.5;
+  float ny = clamp(p.y / halfSize, -1.2, 1.2);
+
+  float globalPhase = u_time * 0.18 + index * 0.11;
+  float bandPhase = fract(globalPhase);
+  float heatY = mix(-1.2, 1.2, bandPhase);
+  float band = exp(-pow((ny - heatY) * 1.6, 2.0));
+
+  float baseHot = smoothstep(0.9, -1.0, ny) * 0.55;
+
+  vec2 angleField = vec2(p.x, p.y) / halfSize;
+  float warp = fbm(angleField * 1.8 + vec2(u_time * 0.16, -u_time * 0.28) + index * 3.7);
+  float ripple = fbm(angleField * 3.6 + vec2(-u_time * 0.24, u_time * 0.18));
+
+  float lobe = exp(-pow((ny + 0.4 - sin(u_time * 0.4 + index) * 0.18) * 1.1, 2.0))
+             * (0.45 + 0.4 * sin(u_time * 0.6 + index * 1.7));
+
+  float heat = band * 0.95 + baseHot + lobe * 0.32;
+  heat += (warp - 0.5) * 0.34;
+  heat += (ripple - 0.5) * 0.16;
+
+  float ebb = 0.5 + 0.5 * sin(u_time * 0.32 + index * 0.9);
+  heat *= mix(0.85, 1.18, ebb);
+
+  // confine to border ring: only fire when near the SDF boundary
+  float ring = smoothstep(boardSize * 0.65, 0.0, abs(d));
+  return clamp(heat, 0.0, 1.0) * ring;
+}
+
 vec4 miniBoard(vec2 p, float boardSize, float index) {
   float radius = boardSize * 0.09;
   float d = sdRoundBox(p, vec2(boardSize * 0.5), radius);
@@ -152,14 +182,13 @@ vec4 miniBoard(vec2 p, float boardSize, float index) {
   float edge = exp(-abs(d) / (2.2 * u_dpr));
   float nearOutside = smoothstep(-2.0 * u_dpr, 7.0 * u_dpr, d);
 
-  vec2 nb = p / (boardSize * 0.5);
-  float interior = boardHeat(nb, index);
+  float heat = borderHeat(p, boardSize, d, index);
 
   float angle = atan(p.y, p.x);
   float cycle = u_time * 0.105 + index * 0.035;
   float hotA = ringPulse(angle, TAU * cycle + index * 0.37, 0.34);
   float hotB = ringPulse(angle, TAU * (cycle + 0.46) - index * 0.19, 0.24);
-  float hot = clamp(hotA * 0.85 + hotB * 0.4 + interior * 0.55, 0.0, 1.0);
+  float hot = clamp(hotA * 0.85 + hotB * 0.4 + heat * 0.7, 0.0, 1.0);
 
   vec3 blueGlow = mix(BLUE, SKY, 0.28 + 0.42 * ringPulse(angle, TAU * (cycle + 0.18), 0.9));
   vec3 hotGlow = thermalRamp(0.62 + hot * 0.34);
@@ -172,29 +201,23 @@ vec4 miniBoard(vec2 p, float boardSize, float index) {
   vec3 color = BLACK;
   float alpha = 0.0;
 
-  vec3 haloTint = mix(BLUE, thermalRamp(0.78), smoothstep(0.35, 0.95, interior) * 0.5);
-  color += haloTint * haloWide * (0.5 + interior * 0.45);
-  color += mix(ROYAL, AMBER, smoothstep(0.55, 0.95, interior) * 0.55) * haloMid * 0.7;
-  color += rimColor * edge * (0.36 + hot * 1.3) * outerOnly;
+  vec3 haloTint = mix(BLUE, thermalRamp(0.78), smoothstep(0.3, 0.9, heat) * 0.55);
+  color += haloTint * haloWide * (0.5 + heat * 0.55);
+  color += mix(ROYAL, AMBER, smoothstep(0.5, 0.95, heat) * 0.6) * haloMid * (0.6 + heat * 0.4);
+  color += rimColor * edge * (0.36 + hot * 1.4) * outerOnly;
   alpha = max(alpha, clamp(haloWide * 0.7 + haloMid * 0.6 + edge * 0.86, 0.0, 1.0));
 
   if (d < 0.0) {
     float boardFill = 1.0 - smoothstep(-2.0 * u_dpr, 0.0, d);
-    vec3 thermal = thermalRamp(interior);
-
-    float gridLine = cellMask(p, boardSize);
-    thermal *= 1.0 - gridLine * 0.55;
-
-    float vig = smoothstep(0.95, 0.45, length(nb));
-    thermal *= mix(0.7, 1.0, vig);
-
-    color = mix(color, thermal, boardFill);
+    vec3 inside = mix(VOID, BLACK, 0.86);
+    float cells = cellMask(p, boardSize);
+    inside += DEEP_NAVY * cells * 0.18;
+    color = mix(color, inside, boardFill);
     alpha = max(alpha, boardFill);
   }
 
   float center = centerCellRim(p, boardSize);
-  float centerPulse = 0.7 + 0.3 * sin(u_time * 1.4);
-  color += AMBER * center * step(index, 4.5) * step(3.5, index) * 0.55 * centerPulse;
+  color += AMBER * center * step(index, 4.5) * step(3.5, index) * 0.52;
   alpha = max(alpha, center * step(index, 4.5) * step(3.5, index) * 0.7);
 
   return vec4(color, alpha);
