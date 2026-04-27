@@ -103,7 +103,7 @@ textarea {
   padding: clamp(28px, 4vh, 56px) clamp(20px, 2vw, 36px);
   overflow: hidden;
   isolation: isolate;
-  background: rgba(0, 0, 0, 0.32);
+  background: rgba(0, 0, 0, 0.26);
   border-right: 1px solid rgba(118, 159, 255, 0.18);
   box-shadow: 8px 0 32px rgba(0, 0, 0, 0.55);
 }
@@ -114,11 +114,13 @@ textarea {
   z-index: 1;
   pointer-events: none;
   content: "";
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.28) 50%, rgba(0, 0, 0, 0.5));
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.36), rgba(0, 0, 0, 0.22) 50%, rgba(0, 0, 0, 0.44));
 }
 
 .mandal-sidebar > .thermal-background {
   z-index: 0;
+  opacity: 0.98;
+  filter: brightness(1.14) saturate(1.04);
 }
 
 .mandal-sidebar > *:not(.thermal-background) {
