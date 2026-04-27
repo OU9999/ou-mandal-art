@@ -271,14 +271,21 @@ const BoxGlowLayer = ({ boardRef }: BoxGlowLayerProps) => {
     const textureContext = textureCanvas.getContext("2d");
     if (!textureContext) return;
 
-    const renderer = new THREE.WebGLRenderer({
-      alpha: true,
-      antialias: true,
-      canvas,
-      preserveDrawingBuffer: true,
-      premultipliedAlpha: false,
-      powerPreference: "high-performance",
-    });
+    let renderer: THREE.WebGLRenderer;
+
+    try {
+      renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: true,
+        canvas,
+        preserveDrawingBuffer: true,
+        premultipliedAlpha: false,
+        powerPreference: "high-performance",
+      });
+    } catch {
+      return;
+    }
+
     renderer.setClearColor(0x000000, 0);
 
     const scene = new THREE.Scene();
