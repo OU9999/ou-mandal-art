@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { toPng } from "html-to-image";
+import { BoxGlowLayer } from "./BoxGlowLayer";
 import { ThermalBackground } from "./ThermalBackground";
 
 const STORAGE_KEY = "ou-mandal-art:cells:v1";
@@ -61,17 +62,22 @@ function getPlaceholder(index: number) {
 }
 
 function getBoardClass(index: number) {
-  const row = Math.floor(index / 9);
-  const col = index % 9;
   const classes = ["mandal-cell"];
 
   classes.push(`is-${getCellRole(index)}`);
-  if (row % 3 === 0) classes.push("is-block-top");
-  if (row % 3 === 2) classes.push("is-block-bottom");
-  if (col % 3 === 0) classes.push("is-block-left");
-  if (col % 3 === 2) classes.push("is-block-right");
 
   return classes.join(" ");
+}
+
+function getBoxCellIndices(boardIndex: number) {
+  const boardRow = Math.floor(boardIndex / 3) * 3;
+  const boardCol = (boardIndex % 3) * 3;
+
+  return Array.from({ length: 9 }, (_, localIndex) => {
+    const localRow = Math.floor(localIndex / 3);
+    const localCol = localIndex % 3;
+    return (boardRow + localRow) * 9 + boardCol + localCol;
+  });
 }
 
 function syncMirroredCell(cells: string[], index: number, value: string) {
@@ -94,6 +100,7 @@ function syncMirroredCell(cells: string[], index: number, value: string) {
 
 export function MandalArtPage() {
   const exportRef = useRef<HTMLDivElement>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
   const [cells, setCells] = useState(getInitialCells);
   const [selectedIndex, setSelectedIndex] = useState(40);
 
@@ -151,23 +158,32 @@ export function MandalArtPage() {
 
       <div className="mandal-workspace">
         <div ref={exportRef} className="mandal-export">
-          <div className="mandal-board" style={{ "--heat": `${heat}%` } as CSSProperties}>
-            {cells.map((value, index) => (
-              <label
-                key={index}
-                className={`${getBoardClass(index)} ${selectedIndex === index ? "is-selected" : ""} ${
-                  value.trim() ? "is-filled" : ""
-                }`}
-              >
-                <textarea
-                  aria-label={`Mandal-Art cell ${index + 1}`}
-                  maxLength={44}
-                  onChange={(event) => updateCell(index, event.target.value)}
-                  onFocus={() => setSelectedIndex(index)}
-                  placeholder={getPlaceholder(index)}
-                  value={value}
-                />
-              </label>
+          <div ref={boardRef} className="mandal-board" style={{ "--heat": `${heat}%` } as CSSProperties}>
+            <BoxGlowLayer boardRef={boardRef} />
+            {Array.from({ length: 9 }, (_, boardIndex) => (
+              <div key={boardIndex} className="mandal-box" data-mandal-box={boardIndex}>
+                {getBoxCellIndices(boardIndex).map((index) => {
+                  const value = cells[index];
+
+                  return (
+                    <label
+                      key={index}
+                      className={`${getBoardClass(index)} ${selectedIndex === index ? "is-selected" : ""} ${
+                        value.trim() ? "is-filled" : ""
+                      }`}
+                    >
+                      <textarea
+                        aria-label={`Mandal-Art cell ${index + 1}`}
+                        maxLength={44}
+                        onChange={(event) => updateCell(index, event.target.value)}
+                        onFocus={() => setSelectedIndex(index)}
+                        placeholder={getPlaceholder(index)}
+                        value={value}
+                      />
+                    </label>
+                  );
+                })}
+              </div>
             ))}
           </div>
         </div>

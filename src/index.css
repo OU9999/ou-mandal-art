@@ -221,12 +221,41 @@ textarea {
 
 .mandal-board {
   --heat: 0%;
+  position: relative;
   display: grid;
   width: 100%;
   height: 100%;
-  grid-template-columns: repeat(9, minmax(0, 1fr));
-  grid-template-rows: repeat(9, minmax(0, 1fr));
-  gap: clamp(4px, 0.72vmin, 7px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: clamp(16px, 2.35vmin, 26px);
+  padding: clamp(5px, 0.9vmin, 10px);
+}
+
+.box-glow-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.mandal-box {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: clamp(5px, 0.78vmin, 8px);
+  padding: clamp(5px, 0.84vmin, 9px);
+  overflow: visible;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(47, 91, 180, 0.08), transparent 74%),
+    rgba(0, 0, 0, 0.18);
+  border-radius: clamp(14px, 2vmin, 18px);
+  box-shadow: inset 0 0 22px rgba(21, 57, 130, 0.14);
 }
 
 .mandal-cell {
@@ -241,8 +270,7 @@ textarea {
   border-radius: clamp(7px, 1.1vmin, 10px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 0 18px rgba(54, 112, 255, 0.08),
-    0 0 18px rgba(24, 94, 255, 0.08);
+    inset 0 0 18px rgba(54, 112, 255, 0.08);
 }
 
 .mandal-cell::after {
@@ -261,8 +289,7 @@ textarea {
   border-color: rgba(122, 188, 255, 0.38);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 0 18px rgba(95, 168, 255, 0.12),
-    0 0 26px rgba(46, 116, 255, 0.16);
+    inset 0 0 18px rgba(95, 168, 255, 0.12);
 }
 
 .mandal-cell.is-keyword {
@@ -276,8 +303,7 @@ textarea {
   border-color: rgba(255, 220, 128, 0.7);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.26),
-    0 0 34px rgba(255, 164, 57, 0.34),
-    0 0 62px rgba(83, 154, 255, 0.2);
+    inset 0 0 28px rgba(255, 164, 57, 0.18);
 }
 
 .mandal-cell.is-selected {
@@ -285,24 +311,7 @@ textarea {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     0 0 0 1px rgba(255, 223, 140, 0.24),
-    0 0 28px rgba(255, 164, 57, 0.34),
-    0 0 54px rgba(73, 143, 255, 0.2);
-}
-
-.mandal-cell.is-block-top {
-  margin-top: clamp(2px, 0.36vmin, 4px);
-}
-
-.mandal-cell.is-block-bottom {
-  margin-bottom: clamp(2px, 0.36vmin, 4px);
-}
-
-.mandal-cell.is-block-left {
-  margin-left: clamp(2px, 0.36vmin, 4px);
-}
-
-.mandal-cell.is-block-right {
-  margin-right: clamp(2px, 0.36vmin, 4px);
+    0 0 22px rgba(255, 164, 57, 0.28);
 }
 
 .mandal-cell textarea {
