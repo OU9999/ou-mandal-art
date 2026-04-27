@@ -181,52 +181,114 @@ float verticalThermal(vec2 p, float boardSize, float index) {
   return clamp(heat, 0.0, 1.0);
 }
 
+// Per-cell thermal rim: vertical thermal mapped onto each cell's local frame.
+// Returns vec3 color contribution and signed distance to the cell.
+struct CellResult {
+  vec3 color;
+  float dist;
+};
+
+CellResult cellThermalRim(vec2 cellLocal, float cellSize, float cellIndex, float boardIndex) {
+  float cornerR = cellSize * 0.10;
+  float d = sdRoundBox(cellLocal, vec2(cellSize * 0.5), cornerR);
+
+  vec2 nb = cellLocal / (cellSize * 0.5);
+  float ny = clamp(nb.y, -1.3, 1.3);
+
+  // each cell phased differently for organic, non-synced motion
+  float drift = u_time * 0.11 + boardIndex * 0.17 + cellIndex * 0.31;
+
+  float bottomHot = smoothstep(1.0, -1.1, ny) * 0.7;
+  float midBand   = exp(-pow(ny * 2.4, 2.0)) * 0.16;
+  float pulsePhase = fract(drift);
+  float pulseY = mix(-1.3, 1.3, pulsePhase);
+  float pulseEnv = sin(pulsePhase * PI);
+  float pulse = exp(-pow((ny - pulseY) * 2.1, 2.0)) * 0.55 * pulseEnv;
+
+  float ebb = 0.5 + 0.5 * sin(u_time * 0.34 + cellIndex * 1.3 + boardIndex * 0.7);
+  float heat = clamp(bottomHot + pulse - midBand, 0.0, 1.0);
+  heat *= mix(0.85, 1.18, ebb);
+
+  vec3 thermal = thermalRamp(heat);
+
+  // narrow rim ring at boundary
+  float rim = exp(-abs(d) / (1.5 * u_dpr));
+  // outward bloom only (positive d)
+  float outsideD = max(d, 0.0);
+  float bloom = exp(-outsideD / (5.5 * u_dpr));
+  float bloomFar = exp(-outsideD / (14.0 * u_dpr));
+
+  vec3 col = thermal * rim * (0.95 + heat * 1.1);
+  col += thermal * bloom * (0.35 + heat * 0.35);
+  col += thermal * bloomFar * 0.18;
+
+  return CellResult(col, d);
+}
+
 vec4 miniBoard(vec2 p, float boardSize, float index) {
   float radius = boardSize * 0.09;
   float d = sdRoundBox(p, vec2(boardSize * 0.5), radius);
   float outside = max(d, 0.0);
-  float inside = max(-d, 0.0);
+  float insideAmt = max(-d, 0.0);
 
-  // thermal value computed from vertical position only (no orbital spinning)
-  float heat = verticalThermal(p, boardSize, index);
-  vec3 thermal = thermalRamp(heat);
+  // Outer mini-board halo (vertical thermal)
+  float outerHeat = verticalThermal(p, boardSize, index);
+  vec3 outerColor = thermalRamp(outerHeat);
 
-  // strong, narrow rim ring AT the boundary
-  float rim = exp(-abs(d) / (1.8 * u_dpr));
-
-  // outward bloom layers (only outside)
+  float outerRim = exp(-abs(d) / (1.8 * u_dpr));
   float bloomNear = exp(-outside / (8.0 * u_dpr));
   float bloomFar = exp(-outside / (38.0 * u_dpr));
-
-  // inward fade: rim continues a hair into the board so the ring reads cleanly
-  float innerFade = exp(-inside / (3.0 * u_dpr));
-
-  // confine bloom strictly to outside; never bleed into the board fill
+  float innerFade = exp(-insideAmt / (3.0 * u_dpr));
   float outsideMask = smoothstep(-0.5 * u_dpr, 1.5 * u_dpr, d);
 
   vec3 color = BLACK;
   float alpha = 0.0;
 
-  color += thermal * bloomFar * outsideMask * (0.45 + heat * 0.35);
-  color += thermal * bloomNear * outsideMask * (0.85 + heat * 0.6);
-  color += thermal * rim * (0.9 + heat * 1.2);
-  color += thermal * innerFade * 0.55;
+  color += outerColor * bloomFar * outsideMask * (0.4 + outerHeat * 0.35);
+  color += outerColor * bloomNear * outsideMask * (0.75 + outerHeat * 0.55);
+  color += outerColor * outerRim * (0.85 + outerHeat * 1.1);
+  color += outerColor * innerFade * 0.45;
+  alpha = max(alpha, clamp(bloomFar * 0.5 + bloomNear * 0.65 + outerRim * 0.9, 0.0, 1.0));
 
-  alpha = max(alpha, clamp(bloomFar * 0.5 + bloomNear * 0.7 + rim * 0.95, 0.0, 1.0));
+  // Per-cell thermal rims (each of the 9 cells inside this mini-board)
+  float pad = boardSize * 0.105;
+  float gap = boardSize * 0.032;
+  float cellSize = (boardSize - pad * 2.0 - gap * 2.0) / 3.0;
 
-  // interior: completely untouched, deep black + cell grid
+  vec3 cellAccum = BLACK;
+  float minCellD = 9999.0;
+
+  for (int cy = 0; cy < 3; cy++) {
+    for (int cx = 0; cx < 3; cx++) {
+      vec2 cellCenter = vec2(
+        -boardSize * 0.5 + pad + cellSize * 0.5 + float(cx) * (cellSize + gap),
+        -boardSize * 0.5 + pad + cellSize * 0.5 + float(cy) * (cellSize + gap)
+      );
+      float cIdx = float(cy * 3 + cx);
+      CellResult cr = cellThermalRim(p - cellCenter, cellSize, cIdx, index);
+      cellAccum += cr.color;
+      minCellD = min(minCellD, cr.dist);
+    }
+  }
+
+  // interior of board: black base + cell rim glows; mask black inside each cell
   if (d < 0.0) {
     float boardFill = 1.0 - smoothstep(-2.0 * u_dpr, 0.0, d);
-    vec3 insideColor = mix(VOID, BLACK, 0.86);
-    float cells = cellMask(p, boardSize);
-    insideColor += DEEP_NAVY * cells * 0.18;
+    vec3 boardInside = mix(VOID, BLACK, 0.86);
+    // keep cell-interior dark — cellAccum is dominated by rim/bloom near boundary, so interior is naturally dim
+    // but ensure deep interior of any cell stays close to black
+    float deepInside = smoothstep(0.0, -3.0 * u_dpr, minCellD);
+    vec3 insideColor = boardInside + cellAccum * (1.0 - deepInside * 0.7);
     color = mix(color, insideColor, boardFill);
     alpha = max(alpha, boardFill);
+  } else {
+    // outside the board, cell rims also leak as soft halo through the rounded rect
+    color += cellAccum * 0.15 * outsideMask;
   }
 
   float center = centerCellRim(p, boardSize);
-  color += AMBER * center * step(index, 4.5) * step(3.5, index) * 0.52;
-  alpha = max(alpha, center * step(index, 4.5) * step(3.5, index) * 0.7);
+  color += AMBER * center * step(index, 4.5) * step(3.5, index) * 0.4;
+  alpha = max(alpha, center * step(index, 4.5) * step(3.5, index) * 0.6);
 
   return vec4(color, alpha);
 }
