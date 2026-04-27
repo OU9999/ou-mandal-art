@@ -1,23 +1,26 @@
 # ou-mandal-art
 
-열화상 플라즈마 무드의 인터랙티브 만다라트 웹.
+열화상 플라즈마 무드의 만다라트 웹.
 
 검은 배경 위에서 발광하는 Apple 이벤트 GIF 톤을 기준으로,
-9x9 만다라트 보드를 하나의 거대한 빛나는 오브젝트로 표현한다.
+실제로 작성 가능한 9x9 만다라트 보드와 Three.js 열화상 백그라운드를 결합한다.
+
+`/3d`에는 81개 타일을 실제 3D 오브젝트로 표현한 쇼케이스 버전을 둔다.
 
 ## 기준 디자인
 
 - 완전한 블랙 배경
-- 9개 미니 보드의 외곽에만 blue halo
-- 선택 셀/중심 셀에 얇은 amber rim
-- 내부 셀은 거의 완전한 black 유지
-- idle 시 외곽 rim light만 천천히 순환
+- 루트 페이지는 작성 가능한 9x9 Web UI
+- 중심 목표와 8개 핵심 키워드는 만다라트 구조에 맞게 자동 미러링
+- `docs/ref.gif`, `docs/ref.png` 톤의 blue halo, amber heat, slow thermal drift
+- `/3d`는 별도 Three.js 쇼케이스 페이지
 
 ## 스택
 
 - Vite + React + TypeScript
-- WebGL + GLSL (1-pass SDF shader)
-- Framer Motion (DOM 오버레이/UI 한정)
+- Three.js + WebGL thermal background
+- React controlled textarea grid
+- html-to-image PNG export
 - localStorage 자동 저장
 
 ## 문서
