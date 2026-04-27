@@ -5,7 +5,7 @@
 
 | 레퍼런스 (`docs/ref.png`) | 결과물 (`docs/main-page-2.png`) |
 | --- | --- |
-| ![reference](docs/ref.png) | ![main page](docs/main-page.png) |
+| ![reference](docs/ref.png) | ![main page](docs/main-page-2.png) |
 
 ## 만든 방식
 
