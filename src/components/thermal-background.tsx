@@ -71,13 +71,11 @@ vec3 thermalRamp(float t) {
 }
 
 float thermalGlyph(vec2 p) {
-  float body = superellipse(p + vec2(0.0, -0.05), vec2(0.82, 0.64), 3.0);
-  float leaf = superellipse((p - vec2(0.28, 0.58)) * mat2(0.74, -0.44, 0.44, 0.74), vec2(0.25, 0.42), 2.2);
-  float lower = superellipse(p - vec2(-0.08, -0.54), vec2(0.52, 0.16), 2.4);
-  float notch = superellipse(p - vec2(0.66, -0.08), vec2(0.26, 0.34), 2.2);
+  vec2 q = p + vec2(0.0, -0.02);
+  float panel = superellipse(q, vec2(0.74, 0.74), 5.8);
+  float bevel = superellipse(q - vec2(0.0, 0.03), vec2(0.66, 0.66), 7.2);
 
-  float united = min(min(body, leaf), lower);
-  return max(united, -notch);
+  return mix(panel, bevel, 0.18);
 }
 
 void main() {
@@ -136,9 +134,13 @@ void main() {
 }
 `;
 
-export function ThermalBackground() {
+const ThermalBackground = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  /**
+   * Initializes the Three.js shader canvas and tears down WebGL resources when
+   * the background unmounts.
+   */
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -218,4 +220,6 @@ export function ThermalBackground() {
   }, []);
 
   return <canvas ref={canvasRef} className="thermal-background" aria-hidden="true" />;
-}
+};
+
+export { ThermalBackground };
