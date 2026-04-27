@@ -145,74 +145,82 @@ float boardHeat(vec2 nb, float index) {
   return clamp(heat, 0.0, 1.0);
 }
 
-float borderHeat(vec2 p, float boardSize, float d, float index) {
+// Apple ref-style vertical thermal: stratified bands, slowly rising
+// 0 = cold (top), 1 = hot (bottom). Map to thermalRamp.
+float verticalThermal(vec2 p, float boardSize, float index) {
   float halfSize = boardSize * 0.5;
-  float ny = clamp(p.y / halfSize, -1.2, 1.2);
+  float ny = p.y / halfSize;
 
-  float globalPhase = u_time * 0.18 + index * 0.11;
-  float bandPhase = fract(globalPhase);
-  float heatY = mix(-1.2, 1.2, bandPhase);
-  float band = exp(-pow((ny - heatY) * 1.6, 2.0));
+  // slow vertical drift of the thermal mapping (heat rises)
+  float drift = u_time * 0.08 + index * 0.13;
+  float yShift = ny + drift * 0.6;
 
-  float baseHot = smoothstep(0.9, -1.0, ny) * 0.55;
+  // base stratified gradient: bottom hot, top cool (inverted because +y is up in shader space, which is screen-down — we'll flip)
+  // Actually p.y > 0 = upper half (screen-down in WebGL fragCoord). We treat -y as "bottom of board".
+  // To match ref (hot at visual bottom), we want larger heat where ny is more negative.
+  float bottomHot = smoothstep(1.0, -1.1, ny) * 0.78;
 
-  vec2 angleField = vec2(p.x, p.y) / halfSize;
-  float warp = fbm(angleField * 1.8 + vec2(u_time * 0.16, -u_time * 0.28) + index * 3.7);
-  float ripple = fbm(angleField * 3.6 + vec2(-u_time * 0.24, u_time * 0.18));
+  // mid blue band — fixed visual stripe like Apple ref
+  float midBand = exp(-pow(ny * 2.4, 2.0)) * 0.18;
 
-  float lobe = exp(-pow((ny + 0.4 - sin(u_time * 0.4 + index) * 0.18) * 1.1, 2.0))
-             * (0.45 + 0.4 * sin(u_time * 0.6 + index * 1.7));
+  // rising hot pulse: a bright band that travels up over time
+  float pulsePhase = fract(drift);
+  float pulseY = mix(-1.2, 1.2, pulsePhase);
+  float pulseEnv = sin(pulsePhase * PI); // fade in/out at extremes
+  float pulse = exp(-pow((ny - pulseY) * 2.0, 2.0)) * 0.55 * pulseEnv;
 
-  float heat = band * 0.95 + baseHot + lobe * 0.32;
-  heat += (warp - 0.5) * 0.34;
-  heat += (ripple - 0.5) * 0.16;
+  // gentle horizontal wobble so bands aren't perfectly straight
+  float wob = (fbm(vec2(ny * 3.5 + index, u_time * 0.25)) - 0.5) * 0.18;
 
-  float ebb = 0.5 + 0.5 * sin(u_time * 0.32 + index * 0.9);
-  heat *= mix(0.85, 1.18, ebb);
+  // breathing
+  float ebb = 0.5 + 0.5 * sin(u_time * 0.28 + index * 0.7);
 
-  // confine to border ring: only fire when near the SDF boundary
-  float ring = smoothstep(boardSize * 0.65, 0.0, abs(d));
-  return clamp(heat, 0.0, 1.0) * ring;
+  float heat = bottomHot + pulse - midBand + wob;
+  heat *= mix(0.9, 1.12, ebb);
+
+  return clamp(heat, 0.0, 1.0);
 }
 
 vec4 miniBoard(vec2 p, float boardSize, float index) {
   float radius = boardSize * 0.09;
   float d = sdRoundBox(p, vec2(boardSize * 0.5), radius);
   float outside = max(d, 0.0);
-  float edge = exp(-abs(d) / (2.2 * u_dpr));
-  float nearOutside = smoothstep(-2.0 * u_dpr, 7.0 * u_dpr, d);
+  float inside = max(-d, 0.0);
 
-  float heat = borderHeat(p, boardSize, d, index);
+  // thermal value computed from vertical position only (no orbital spinning)
+  float heat = verticalThermal(p, boardSize, index);
+  vec3 thermal = thermalRamp(heat);
 
-  float angle = atan(p.y, p.x);
-  float cycle = u_time * 0.105 + index * 0.035;
-  float hotA = ringPulse(angle, TAU * cycle + index * 0.37, 0.34);
-  float hotB = ringPulse(angle, TAU * (cycle + 0.46) - index * 0.19, 0.24);
-  float hot = clamp(hotA * 0.85 + hotB * 0.4 + heat * 0.7, 0.0, 1.0);
+  // strong, narrow rim ring AT the boundary
+  float rim = exp(-abs(d) / (1.8 * u_dpr));
 
-  vec3 blueGlow = mix(BLUE, SKY, 0.28 + 0.42 * ringPulse(angle, TAU * (cycle + 0.18), 0.9));
-  vec3 hotGlow = thermalRamp(0.62 + hot * 0.34);
-  vec3 rimColor = mix(blueGlow, hotGlow, smoothstep(0.18, 0.85, hot));
+  // outward bloom layers (only outside)
+  float bloomNear = exp(-outside / (8.0 * u_dpr));
+  float bloomFar = exp(-outside / (38.0 * u_dpr));
 
-  float haloWide = exp(-outside / (42.0 * u_dpr)) * nearOutside;
-  float haloMid = exp(-outside / (18.0 * u_dpr)) * nearOutside;
-  float outerOnly = smoothstep(-1.0 * u_dpr, 5.5 * u_dpr, d);
+  // inward fade: rim continues a hair into the board so the ring reads cleanly
+  float innerFade = exp(-inside / (3.0 * u_dpr));
+
+  // confine bloom strictly to outside; never bleed into the board fill
+  float outsideMask = smoothstep(-0.5 * u_dpr, 1.5 * u_dpr, d);
 
   vec3 color = BLACK;
   float alpha = 0.0;
 
-  vec3 haloTint = mix(BLUE, thermalRamp(0.78), smoothstep(0.3, 0.9, heat) * 0.55);
-  color += haloTint * haloWide * (0.5 + heat * 0.55);
-  color += mix(ROYAL, AMBER, smoothstep(0.5, 0.95, heat) * 0.6) * haloMid * (0.6 + heat * 0.4);
-  color += rimColor * edge * (0.36 + hot * 1.4) * outerOnly;
-  alpha = max(alpha, clamp(haloWide * 0.7 + haloMid * 0.6 + edge * 0.86, 0.0, 1.0));
+  color += thermal * bloomFar * outsideMask * (0.45 + heat * 0.35);
+  color += thermal * bloomNear * outsideMask * (0.85 + heat * 0.6);
+  color += thermal * rim * (0.9 + heat * 1.2);
+  color += thermal * innerFade * 0.55;
 
+  alpha = max(alpha, clamp(bloomFar * 0.5 + bloomNear * 0.7 + rim * 0.95, 0.0, 1.0));
+
+  // interior: completely untouched, deep black + cell grid
   if (d < 0.0) {
     float boardFill = 1.0 - smoothstep(-2.0 * u_dpr, 0.0, d);
-    vec3 inside = mix(VOID, BLACK, 0.86);
+    vec3 insideColor = mix(VOID, BLACK, 0.86);
     float cells = cellMask(p, boardSize);
-    inside += DEEP_NAVY * cells * 0.18;
-    color = mix(color, inside, boardFill);
+    insideColor += DEEP_NAVY * cells * 0.18;
+    color = mix(color, insideColor, boardFill);
     alpha = max(alpha, boardFill);
   }
 
