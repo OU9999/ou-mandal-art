@@ -347,14 +347,15 @@ function getCellHeat(cell: MandalCell, state: BoardState): HeatLevel {
 
 ```text
 App
-├─ ThermalStage
-│  ├─ AmbientGlow
-│  ├─ MandalBoard
-│  │  ├─ MandalBlock x 9
-│  │  │  └─ MandalCell x 9
-│  │  └─ HeatFlowLayer
-│  └─ MinimalControls
-└─ ExportRenderer
+└─ MandalArtPage
+   ├─ MandalLayout
+   ├─ MandalSidebar
+   ├─ MandalMain
+   ├─ MandalBoard
+   │  ├─ MandalBox x 9
+   │  │  └─ MandalCell x 9
+   │  └─ BoxGlowLayer
+   └─ MandalExport
 ```
 
 기존 생산성 UI처럼 패널을 많이 만들지 않는다.
