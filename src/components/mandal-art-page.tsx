@@ -3,13 +3,14 @@ import { BoxGlowLayer } from "./box-glow-layer";
 import { ThermalBackground } from "./thermal-background";
 import { MandalCellsProvider } from "./mandal-art-page/_components/mandal-cells-provider";
 import { MandalLayout } from "./mandal-art-page/_components/mandal-layout";
+import { MandalSidebar } from "./mandal-art-page/_components/mandal-sidebar";
+import { MandalMain } from "./mandal-art-page/_components/mandal-main";
 import { MandalHeader } from "./mandal-art-page/_components/mandal-header";
 import { MandalActions } from "./mandal-art-page/_components/mandal-actions";
-import { MandalWorkspace } from "./mandal-art-page/_components/mandal-workspace";
+import { MandalStatus } from "./mandal-art-page/_components/mandal-status";
 import { MandalExport } from "./mandal-art-page/_components/mandal-export";
 import { MandalBoard } from "./mandal-art-page/_components/mandal-board";
 import { MandalBox } from "./mandal-art-page/_components/mandal-box";
-import { MandalStatus } from "./mandal-art-page/_components/mandal-status";
 import { useMandalExport } from "./mandal-art-page/_hooks/use-mandal-export";
 
 const MandalArtPage = () => {
@@ -20,10 +21,13 @@ const MandalArtPage = () => {
   return (
     <MandalCellsProvider>
       <MandalLayout>
-        <ThermalBackground />
-        <MandalHeader />
-        <MandalActions onExport={exportImage} />
-        <MandalWorkspace>
+        <MandalSidebar>
+          <ThermalBackground />
+          <MandalHeader />
+          <MandalActions onExport={exportImage} />
+          <MandalStatus />
+        </MandalSidebar>
+        <MandalMain>
           <MandalExport ref={exportRef}>
             <MandalBoard ref={boardRef}>
               <BoxGlowLayer boardRef={boardRef} />
@@ -38,8 +42,7 @@ const MandalArtPage = () => {
               <MandalBox boardIndex={8} />
             </MandalBoard>
           </MandalExport>
-        </MandalWorkspace>
-        <MandalStatus />
+        </MandalMain>
       </MandalLayout>
     </MandalCellsProvider>
   );
