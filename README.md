@@ -3,7 +3,7 @@
 `docs/ref.png`(Apple 이벤트 키비주얼)의 열화상 무드를 가져온 9x9 만다라트 웹.
 - https://www.apple.com/kr/apple-events/
 
-| 레퍼런스 (`docs/ref.png`) | 결과물 (`docs/main-page.png`) |
+| 레퍼런스 (`docs/ref.png`) | 결과물 (`docs/main-page-2.png`) |
 | --- | --- |
 | ![reference](docs/ref.png) | ![main page](docs/main-page.png) |
 
