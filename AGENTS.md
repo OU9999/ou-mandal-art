@@ -16,7 +16,7 @@
 - 함수는 단일 책임 원칙 준수. 순수 함수 지향하고, 작은 함수로 분리 후 조합.
 - `useEffect` 코드 추가시 항상 JSDoc으로 코드 설명.
 - `.then()` / `.catch()` 체이닝 금지. 반드시 `async/await` 사용.
-
+- 파일명은 kebab-case 사용 (예: `thermal-stage.tsx`, `mandal-art-page.tsx`).
 
 
 ### 커밋 & PR 규칙
