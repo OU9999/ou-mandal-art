@@ -64,6 +64,29 @@ const getPlaceholder = (index: number) => {
 
 const getBoardClass = (index: number) => `mandal-cell is-${getCellRole(index)}`;
 
+const getGoverningCenterIndex = (cellIndex: number): number | null => {
+  const row = Math.floor(cellIndex / 9);
+  const col = cellIndex % 9;
+  const boardIndex = Math.floor(row / 3) * 3 + Math.floor(col / 3);
+
+  if (boardIndex === 4) return null;
+
+  const boardCenter = getBoardCenterIndex(boardIndex);
+  if (cellIndex === boardCenter) return null;
+
+  return boardCenter;
+};
+
+const getMirrorIndex = (cellIndex: number): number | null => {
+  const fromCenter = centerToBoardIndex.get(cellIndex);
+  if (typeof fromCenter === "number") return fromCenter;
+
+  const fromBoard = boardToCenterIndex.get(cellIndex);
+  if (typeof fromBoard === "number") return fromBoard;
+
+  return null;
+};
+
 const getBoxCellIndices = (boardIndex: number) => {
   const boardRow = Math.floor(boardIndex / 3) * 3;
   const boardCol = (boardIndex % 3) * 3;
@@ -101,6 +124,8 @@ export {
   getPlaceholder,
   getBoardClass,
   getBoxCellIndices,
+  getGoverningCenterIndex,
+  getMirrorIndex,
   syncMirroredCell,
 };
 export type { CellRole };

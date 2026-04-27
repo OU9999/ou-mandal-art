@@ -1,4 +1,4 @@
-import { getBoardClass, getPlaceholder } from "../_lib/mandal-grid";
+import { getBoardClass, getGoverningCenterIndex, getMirrorIndex, getPlaceholder } from "../_lib/mandal-grid";
 import { useMandalCellsContext } from "../_hooks/mandal-cells-context";
 
 interface MandalCellProps {
@@ -11,10 +11,18 @@ const MandalCell = ({ cellIndex }: MandalCellProps) => {
   const isSelected = selectedIndex === cellIndex;
   const isFilled = value.trim().length > 0;
 
+  const governingIndex = getGoverningCenterIndex(cellIndex);
+  const isDisabled = governingIndex !== null && cells[governingIndex].trim().length === 0;
+
+  const mirrorIndex = getMirrorIndex(cellIndex);
+  const isLinkedSelected = !isSelected && mirrorIndex !== null && selectedIndex === mirrorIndex;
+
   const className = [
     getBoardClass(cellIndex),
     isSelected ? "is-selected" : "",
+    isLinkedSelected ? "is-linked-selected" : "",
     isFilled ? "is-filled" : "",
+    isDisabled ? "is-disabled" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -23,6 +31,7 @@ const MandalCell = ({ cellIndex }: MandalCellProps) => {
     <label className={className}>
       <textarea
         aria-label={`Mandal-Art cell ${cellIndex + 1}`}
+        disabled={isDisabled}
         maxLength={44}
         onChange={(event) => updateCell(cellIndex, event.target.value)}
         onFocus={() => setSelectedIndex(cellIndex)}
