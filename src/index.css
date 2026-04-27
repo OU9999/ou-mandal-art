@@ -3,6 +3,7 @@ body,
 #root {
   width: 100%;
   height: 100%;
+  min-height: 100dvh;
   margin: 0;
   background: #000;
   color: #f6f8ff;
@@ -37,6 +38,7 @@ textarea {
   position: relative;
   width: 100vw;
   height: 100vh;
+  min-height: 100dvh;
 }
 
 .mandal-page {
@@ -88,7 +90,7 @@ textarea {
 
 .mandal-page {
   display: grid;
-  grid-template-columns: 20% 80%;
+  grid-template-columns: minmax(232px, 22vw) minmax(0, 1fr);
 }
 
 .mandal-sidebar {
@@ -96,7 +98,8 @@ textarea {
   z-index: 4;
   display: flex;
   flex-direction: column;
-  gap: clamp(20px, 3vh, 36px);
+  min-width: 0;
+  gap: clamp(18px, 2.6vh, 34px);
   padding: clamp(28px, 4vh, 56px) clamp(20px, 2vw, 36px);
   overflow: hidden;
   isolation: isolate;
@@ -148,7 +151,7 @@ textarea {
 
 .mandal-sidebar .showcase-copy h1 {
   max-width: none;
-  font-size: clamp(32px, 3.4vw, 60px);
+  font-size: clamp(30px, 3vw, 56px);
 }
 
 .showcase-copy {
@@ -207,19 +210,22 @@ textarea {
   right: clamp(18px, 4.8vw, 72px);
   z-index: 5;
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
   align-items: center;
 }
 
 .route-pill {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   min-width: 44px;
   height: 34px;
-  padding: 0 13px;
+  padding: 0 11px;
   color: rgba(218, 230, 255, 0.86);
   text-decoration: none;
+  white-space: nowrap;
   background: rgba(7, 15, 36, 0.46);
   border: 1px solid rgba(118, 159, 255, 0.24);
   border-radius: 999px;
@@ -334,12 +340,12 @@ textarea {
 
 .mandal-cell.is-goal {
   background:
-    radial-gradient(circle at 50% 42%, rgba(255, 240, 184, 0.32), rgba(255, 140, 44, 0.16) 44%, transparent 74%),
-    linear-gradient(180deg, rgba(20, 18, 14, 0.96), rgba(4, 4, 6, 0.98));
-  border-color: rgba(255, 220, 128, 0.62);
+    radial-gradient(circle at 50% 42%, rgba(110, 205, 255, 0.22), rgba(23, 69, 239, 0.14) 46%, transparent 76%),
+    linear-gradient(180deg, rgba(14, 18, 28, 0.96), rgba(3, 4, 8, 0.98));
+  border-color: rgba(110, 205, 255, 0.5);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 0 28px rgba(255, 164, 57, 0.14);
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 0 32px rgba(60, 130, 255, 0.18);
 }
 
 .mandal-cell.is-selected {
@@ -376,27 +382,34 @@ textarea {
 }
 
 .mandal-cell textarea::placeholder {
-  color: rgba(148, 183, 255, 0.42);
+  background: radial-gradient(ellipse farthest-corner at center top, #6ECDFF 20%, #1745EF 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: rgba(0, 0, 0, 0);
+  opacity: 0.95;
 }
 
 .mandal-cell.is-goal textarea {
   color: #f8fbff;
   font-size: clamp(10px, 1.56vmin, 15px);
   text-shadow:
-    0 0 22px rgba(255, 196, 96, 0.32),
+    0 0 22px rgba(110, 205, 255, 0.4),
     0 6px 24px rgba(0, 0, 0, 0.7);
 }
 
 .owner-name-trigger {
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
   padding: 0;
   color: rgba(166, 196, 255, 0.74);
   font: inherit;
-  font-size: clamp(11px, 1vw, 13px);
+  font-size: clamp(15px, 1.4vw, 19px);
   font-weight: 600;
   letter-spacing: 0;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
+  text-align: left;
   background: transparent;
   border: 0;
   border-bottom: 1px dashed rgba(166, 196, 255, 0.28);
@@ -523,7 +536,7 @@ textarea {
   cursor: not-allowed;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .showcase-copy {
     top: 22px;
     left: 20px;
@@ -536,22 +549,48 @@ textarea {
 
   .mandal-page {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .mandal-sidebar {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 14px;
-    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px 18px;
+    align-items: start;
+    padding: 18px 20px 16px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(118, 159, 255, 0.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
   }
 
   .mandal-sidebar .showcase-copy h1 {
-    font-size: clamp(32px, 9vw, 48px);
+    font-size: clamp(34px, 6vw, 48px);
+  }
+
+  .mandal-sidebar .mandal-actions {
+    justify-content: flex-end;
+    justify-self: end;
   }
 
   .mandal-main {
     padding: 12px 14px 20px;
+  }
+}
+
+@media (max-width: 560px) {
+  .mandal-sidebar {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 16px 20px;
+  }
+
+  .mandal-sidebar .showcase-copy h1 {
+    font-size: clamp(30px, 9vw, 40px);
+  }
+
+  .mandal-sidebar .mandal-actions {
+    justify-content: flex-start;
+    justify-self: start;
   }
 }
 
